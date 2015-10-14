@@ -14,12 +14,17 @@ router.get('/about', function(req, res, next) {
 
 /* GET document page. */
 router.get('/documents', function(req, res, next) {
-    res.render('documents', {title: 'about', user: req.user})
+    res.render('documents', {title: 'documents', user: req.user})
+});
+
+/* GET catullus 85 page. */
+router.get('/catullus', function(req, res, next) {
+    res.render('catullus', {title: 'catullus', user: req.user})
 });
 
 /* GET user page. */
 router.get('/user', function(req, res, next) {
-    res.render('user', {title: 'about', user: req.user})
+    res.render('user', {title: 'user', user: req.user})
 });
 
 /* GET signin page. */

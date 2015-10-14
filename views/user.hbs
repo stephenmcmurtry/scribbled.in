@@ -1,6 +1,5 @@
 {{#if user}}
     <div class="jumbotron">
-        <h1>Orchestrate User Authentication</h1>
         <p>Below is your profile information!</p>
     </div>
     <div class="panel panel-default">
@@ -9,13 +8,11 @@
         </div>
         <div class="panel-body">
             <p>Username: {{user.username}}</p>
-            <p>Avatar: <img src="{{user.avatar}}"/></p>
         </div>
     </div>
 
 {{else}}
     <div class="jumbotron">
-        <h1>Orchestrate User Authentication</h1>
         <p>Sign in and view your profile!</p>
         <p>
             <a href="/signin" class="btn btn-primary btn-lg" role="button">
