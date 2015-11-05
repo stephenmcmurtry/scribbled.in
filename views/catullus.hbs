@@ -1,6 +1,83 @@
 <div class="container" style="padding-top: 50px">
-    <p>
-        I hate and I love. Perhaps you ask why I do this?<br>
-        I do not know, but I feel it happen and I am torn apart.
-    </p>
+    <div class="ui raised segment" id="page1">
+        <div class="ui grid">
+            <div class="eight wide column">
+                <p id="line1">I hate and I love. Perhaps you ask why I do this?</p>
+                <p id="line2">I do not know, but I feel it happen and I am torn apart.</p>
+            </div>
+            <div class="eight wide column">
+                <p id="note1" style="color:#ff0000"></p>
+                <p id="note2" style="color:#ff0000"></p>
+            </div>
+        </div>
+
+        <div class="right ui rail">
+            <div class="ui sticky">
+                <div class="ui card">
+                    <div class="content">
+                        <div class="header">Annotation</div>
+                    </div>
+                    <div class="content">
+                        <p id="selectedText"></p>
+                    </div>
+                    <div class="content">
+                        <div class="ui fluid form">
+                            <div class="field">
+                                <label>Text</label>
+                                <textarea style="width:220px" id="annotation"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="extra content">
+                        <div class="ui bottom button" id="addNote">Add Annotation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+
+<script src="http://localhost:3001/socket.io/socket.io.js"> </script>
+
+<script>
+    // Turn on socket.io
+    var socket = io.connect('http://localhost:3001');
+
+    // Activate Semantic UI
+    $('.ui.sticky')
+            .sticky({
+                context: '#page1'
+            })
+    ;
+
+    var lineToNote = "";
+
+    $(document).ready(function() {
+        $("p").click(function(event) {
+            $("#selectedText").text($(event.target).text());
+            lineToNote = (event.target.id).toString();
+            console.log(event.target.id);
+        });
+    });
+
+    $(document).ready(function() {
+        $('#addNote').click(function() {
+            var lineNumber = lineToNote;
+            lineNumber = lineNumber.replace(/\D/g,'');
+            lineNumber = "note" + lineNumber;
+            socket.emit('note', {
+                "line": lineNumber,
+                "note": $("#annotation").val()
+            });
+            $("#" + lineNumber).text($("#annotation").val());
+        });
+    });
+
+    socket.on('news', function (data) {
+        for(var i = 0; i < data.length; i++) {
+            $('#' + data[i].line).text(data[i].note);
+        }
+        console.log(data);
+    });
+</script>

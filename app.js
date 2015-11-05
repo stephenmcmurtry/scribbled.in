@@ -14,7 +14,27 @@ var funct = require('./functions.js'); //funct file contains our helper function
 
 var routes = require('./routes/index');
 
+var fs = require('fs');
+
 var app = express();
+
+// app.use/routes/etc...
+
+var server = app.listen(3001);
+var io = require('socket.io').listen(server);
+
+var json = JSON.parse(fs.readFileSync('./comments.json', 'utf8'));
+
+io.on('connection', function (socket) {
+    socket.emit('news', json);
+    socket.on('note', function(data) {
+        var obj = JSON.parse(fs.readFileSync('./comments.json', 'utf8'));
+        var entry = JSON.parse(data);
+        obj.push(data);
+        json = JSON.stringify(obj);
+        console.log(data);
+    });
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
