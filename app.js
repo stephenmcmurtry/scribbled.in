@@ -8,6 +8,7 @@ var session = require('express-session');
 var passport = require('passport');
 var LocalStrategy = require('passport-local');
 var methodOverride = require('method-override');
+var dbMethods = require('./mongoFunctions.js');
 
 var config = require('./config.js'); //config file contains all tokens and other private info
 var funct = require('./functions.js'); //funct file contains our helper functions for our Passport and database work
@@ -18,21 +19,40 @@ var fs = require('fs');
 
 var app = express();
 
+// MongoDB stuff
+var MongoClient = require('mongodb').MongoClient;
+var assert = require('assert');
+
+var url = 'mongodb://localhost:27017/test';
+MongoClient.connect(url, function(err, db) {
+    assert.equal(null, err);
+    console.log("Connected correctly to server.");
+    db.close();
+});
+
 // app.use/routes/etc...
 
 var server = app.listen(3001);
 var io = require('socket.io').listen(server);
 
-var json = JSON.parse(fs.readFileSync('./comments.json', 'utf8'));
-
 io.on('connection', function (socket) {
-    socket.emit('news', json);
     socket.on('note', function(data) {
-        var obj = JSON.parse(fs.readFileSync('./comments.json', 'utf8'));
-        var entry = JSON.parse(data);
-        obj.push(data);
-        json = JSON.stringify(obj);
+        MongoClient.connect(url, function(err, db) {
+            assert.equal(null, err);
+            dbMethods.insertDocument(db, data, function() {
+                db.close();
+            });
+        });
         console.log(data);
+    });
+
+    socket.on('noteRequest', function(data) {
+        MongoClient.connect(url, function(err, db) {
+            assert.equal(null, err);
+            dbMethods.getUserNotes(db, data, function() {
+                db.close();
+            });
+        });
     });
 });
 
@@ -40,8 +60,6 @@ io.on('connection', function (socket) {
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));

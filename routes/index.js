@@ -19,7 +19,7 @@ router.get('/documents', function(req, res, next) {
 
 /* GET catullus 85 page. */
 router.get('/catullus', function(req, res, next) {
-    res.render('catullus', {title: 'catullus', user: req.user})
+    res.render('catullus', {title: 'catullus', user: req.user, username: req.user.displayName})
 });
 
 /* GET user page. */

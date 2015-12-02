@@ -44,6 +44,8 @@
     // Turn on socket.io
     var socket = io.connect('http://localhost:3001');
 
+    socket.emit('noteRequest', {page: "catullus"});
+
     // Activate Semantic UI
     $('.ui.sticky')
             .sticky({
@@ -67,17 +69,12 @@
             lineNumber = lineNumber.replace(/\D/g,'');
             lineNumber = "note" + lineNumber;
             socket.emit('note', {
+                "user": "{{user.username}}",
+                "document": "{{title}}",
                 "line": lineNumber,
                 "note": $("#annotation").val()
             });
             $("#" + lineNumber).text($("#annotation").val());
         });
-    });
-
-    socket.on('news', function (data) {
-        for(var i = 0; i < data.length; i++) {
-            $('#' + data[i].line).text(data[i].note);
-        }
-        console.log(data);
     });
 </script>
