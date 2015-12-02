@@ -8,7 +8,6 @@ var session = require('express-session');
 var passport = require('passport');
 var LocalStrategy = require('passport-local');
 var methodOverride = require('method-override');
-var dbMethods = require('./mongoFunctions.js');
 
 var config = require('./config.js'); //config file contains all tokens and other private info
 var funct = require('./functions.js'); //funct file contains our helper functions for our Passport and database work
@@ -18,6 +17,11 @@ var routes = require('./routes/index');
 var fs = require('fs');
 
 var app = express();
+
+// app.use/routes/etc...
+
+var server = app.listen(3001);
+var io = require('socket.io').listen(server);
 
 // MongoDB stuff
 var MongoClient = require('mongodb').MongoClient;
@@ -30,16 +34,56 @@ MongoClient.connect(url, function(err, db) {
     db.close();
 });
 
-// app.use/routes/etc...
-
-var server = app.listen(3001);
-var io = require('socket.io').listen(server);
-
 io.on('connection', function (socket) {
+
+    // DB Methods
+
+    var insertDocument = function(db, data, callback) {
+        db.collection('annotations').insertOne({
+            "user": data.user,
+            "document": data.document,
+            "line": data.line,
+            "note": data.note
+        }, function(err, result) {
+            assert.equal(err, null);
+            console.log("Inserted a document into the annotations collection.");
+            callback(result);
+        });
+    };
+
+    var getUserNotes = function(db, data, callback) {
+        var cursor =db.collection('annotations').find( { "user": data.user, "document": data.document} );
+        cursor.each(function(err, doc) {
+            assert.equal(err, null);
+            if (doc != null) {
+                console.dir(doc);
+                socket.emit('queryResults', doc);
+            } else {
+                callback();
+            }
+        });
+    };
+
+    var getAllNotes = function(db, data, callback) {
+        var cursor =db.collection('annotations').find( {"document": data.document} );
+        cursor.each(function(err, doc) {
+            assert.equal(err, null);
+            if (doc != null) {
+                console.dir(doc);
+                socket.emit('allNotes', doc);
+            } else {
+                callback();
+            }
+        });
+    };
+
+    // End DB Methods
+
+
     socket.on('note', function(data) {
         MongoClient.connect(url, function(err, db) {
             assert.equal(null, err);
-            dbMethods.insertDocument(db, data, function() {
+            insertDocument(db, data, function() {
                 db.close();
             });
         });
@@ -49,11 +93,20 @@ io.on('connection', function (socket) {
     socket.on('noteRequest', function(data) {
         MongoClient.connect(url, function(err, db) {
             assert.equal(null, err);
-            dbMethods.getUserNotes(db, data, function() {
+            getUserNotes(db, data, function() {
                 db.close();
             });
         });
     });
+
+    socket.on('getAllNotes', function(data) {
+        MongoClient.connect(url, function(err, db) {
+            assert.equal(null, err);
+            getAllNotes(db, data, function() {
+                db.close();
+            });
+        });
+    })
 });
 
 // view engine setup
@@ -69,6 +122,7 @@ app.use(session({secret: 'supernova', saveUninitialized: true, resave: true}));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use("/scripts", express.static(__dirname + '/scripts'));
 
 //===============PASSPORT=================
 

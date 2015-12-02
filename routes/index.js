@@ -22,6 +22,11 @@ router.get('/catullus', function(req, res, next) {
     res.render('catullus', {title: 'catullus', user: req.user, username: req.user.displayName})
 });
 
+/* GET kubla khan page. */
+router.get('/kubla_khan', function(req, res, next) {
+    res.render('kubla_khan', {title: 'kubla_khan', user: req.user, username: req.user.displayName})
+});
+
 /* GET user page. */
 router.get('/user', function(req, res, next) {
     res.render('user', {title: 'user', user: req.user})
